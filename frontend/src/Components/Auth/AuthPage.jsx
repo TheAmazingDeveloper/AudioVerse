@@ -1,182 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
-import { links, serverURL } from "../../utils/constants.js";
-import axios from "axios";
-import { loginUser, registerUser } from "../../utils/auth.js";
-import { redirect, useNavigate } from "react-router-dom";
-import CustomLogger from "../../utils/customLogger.js";
+import React, { useRef, useState } from "react";
+import LoginPage from "./LoginPage.jsx";
+import RegisterPage from "./RegisterPage.jsx";
+import { links } from "../../utils/constants.js";
 
 function AuthPage() {
-  const uploaderRef = useRef(null);
-  const imageRef = useRef(null);
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [avatar, setAvatar] = useState(null);
   const [isRegistered, setIsRegistered] = useState(true);
-  const [validationErrors, setValidationErrors] = useState({
-    avatar: null,
-    displayName: null,
-    email: null,
-    password: null,
-  });
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    try {
-      imageRef.current.src = URL.createObjectURL(avatar);
-    } catch {
-      console.log(
-        new CustomLogger(
-          "(AuthPage.jsx)",
-          "Avatar Url",
-          "Error in generating url from avatarFile"
-        )
-      );
-    }
-  }, [avatar]);
-
-  const imagePicker = (event) => {
-    event.preventDefault();
-    uploaderRef.current.click();
-  };
-
-  const handleUploader = (event) => {
-    setAvatar(event.target.files[0]);
-  };
-
-  const handleDisplayName = (event) => {
-    const displayName = event.target.value;
-    if (displayName === "") {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        displayName: "Name cannot be empty.",
-      }));
-    } else {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        displayName: null,
-      }));
-      setDisplayName(displayName);
-    }
-  };
-
-  const handleEmail = (event) => {
-    const email = event.target.value;
-    if (email == "") {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "Emaiil cannot be empty.",
-      }));
-    } else if (!email.match(/[@]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "Email not valid",
-      }));
-    } else if (email.match(/[ ]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "Email not valid",
-      }));
-    } else {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: null,
-      }));
-      setEmail(email);
-    }
-  };
-
-  const handlePassword = (event) => {
-    const password = event.target.value;
-    if (password === "") {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password cannot be empty.",
-      }));
-    } else if (password.length < 6 || password.length > 12) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password should be 6-12 characters long",
-      }));
-    } else if (!password.match(/[A-Z]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password must contain atleast 1 uppercase character",
-      }));
-    } else if (!password.match(/[a-z]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password must contain atleast 1 lowercase character",
-      }));
-    } else if (!password.match(/[0-9]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password must contain atleast 1 number",
-      }));
-    } else if (!password.match(/[@#$]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password must contain atleast one of these '@', '#', '$'",
-      }));
-    } else if (password.match(/[ ]/)) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: "Password cannot contain space",
-      }));
-    } else {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        password: null,
-      }));
-      setPassword(password);
-    }
-  };
-
-  const handleRegisteration = async (event) => {
-    event.preventDefault();
-    for (const element in validationErrors) {
-      if (validationErrors[element] != null) {
-        setValidationErrors();
-      }
-    }
-    if (avatar == null) {
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        avatar: "Avatar cannot be empty",
-      }));
-    }
-    const formData = new FormData();
-    formData.append("avatar", avatar);
-    formData.append("displayName", displayName);
-    formData.append("email", email);
-    formData.append("password", password);
-    const res = await registerUser(formData);
-    console.log(new CustomLogger("(AuthPage.jsx)", "Response User Data", res));
-    if (res.statusCode == 401)
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: res.message,
-      }));
-    if (res.data.user != null) return navigate("/");
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    for (const element in validationErrors) {
-      if (validationErrors[element] != null) {
-        setValidationErrors((prevErrors) => ({ ...prevErrors }));
-      }
-    }
-    const res = await loginUser({ email, password });
-    if (res.statusCode == 401)
-      setValidationErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "Invalid email/password",
-        password: "Invalid email/password",
-      }));
-    if (res.data.user != null) return navigate("/");
-  };
 
   return (
     <>
@@ -191,32 +19,13 @@ function AuthPage() {
             </div>
             <div className="w-1/2">
               {isRegistered ? (
-                <Login
-                  handleLogin={handleLogin}
-                  handleEmail={handleEmail}
-                  handlePassword={handlePassword}
-                  validationErrors={validationErrors}
-                  primaryBtnText={"Login"}
-                  secondaryBtnText1={"Don't have an account?"}
-                  secondaryBtnText2={"Register"}
+                <LoginPage
                   handleFormChange={() => {
                     setIsRegistered(false);
                   }}
                 />
               ) : (
-                <Register
-                  imageRef={imageRef}
-                  uploaderRef={uploaderRef}
-                  imagePicker={imagePicker}
-                  handleRegisteration={handleRegisteration}
-                  handleUploader={handleUploader}
-                  validationErrors={validationErrors}
-                  handleDisplayName={handleDisplayName}
-                  handleEmail={handleEmail}
-                  handlePassword={handlePassword}
-                  primaryBtnText={"Register"}
-                  secondaryBtnText1={"Already have an account?"}
-                  secondaryBtnText2={"Login"}
+                <RegisterPage
                   handleFormChange={() => {
                     setIsRegistered(true);
                   }}
@@ -233,8 +42,7 @@ function AuthPage() {
   );
 }
 
-function Login({
-  handleLogin,
+export function BasicForm({
   handleEmail,
   handlePassword,
   validationErrors,
@@ -243,95 +51,21 @@ function Login({
   secondaryBtnText2,
   handleFormChange,
 }) {
-  return (
-    <form
-      className="space-y-6"
-      onSubmit={handleLogin}
-      encType="application/x-www-form-urlencoded"
-    >
-      {/* TODO:Implement forgot password */}
-      <BasicForm
-        handleEmail={handleEmail}
-        handlePassword={handlePassword}
-        validationErrors={validationErrors}
-        primaryBtnText={primaryBtnText}
-        secondaryBtnText1={secondaryBtnText1}
-        secondaryBtnText2={secondaryBtnText2}
-        handleFormChange={handleFormChange}
-      />
-    </form>
-  );
-}
-function Register({
-  imageRef,
-  uploaderRef,
-  imagePicker,
-  handleRegisteration,
-  handleUploader,
-  validationErrors,
-  handleDisplayName,
-  handleEmail,
-  handlePassword,
-  primaryBtnText,
-  secondaryBtnText1,
-  secondaryBtnText2,
-  handleFormChange,
-}) {
-  return (
-    <form className="space-y-6" onSubmit={handleRegisteration}>
-      <button
-        onClick={imagePicker}
-        className="h-[7.8125em] w-[7.8125em] mx-auto flex justify-center items-center overflow-hidden rounded-full border-2 border-[#e2e2e2]"
-      >
-        <img ref={imageRef} src={`${links.addAvatarImage}`} />
-      </button>
-      <span className="block m-0 text-red-700 text-sm text-center">
-        {validationErrors.avatar == null ? "" : validationErrors.avatar}
-      </span>
-      <input
-        type="file"
-        name="avatar"
-        ref={uploaderRef}
-        onChange={handleUploader}
-        accept=".png, .jpg, .jpeg"
-        hidden
-      />
-      <input
-        placeholder="Name"
-        name="displayName"
-        onChange={handleDisplayName}
-        className="block text-lg p-3 w-full rounded-md border-2 border-[#e2e2e2] outline-none"
-      />
-      <span className="text-red-700 text-sm">
-        {validationErrors.displayName == null
-          ? ""
-          : validationErrors.displayName}
-      </span>
-      <BasicForm
-        handleEmail={handleEmail}
-        handlePassword={handlePassword}
-        validationErrors={validationErrors}
-        primaryBtnText={primaryBtnText}
-        secondaryBtnText1={secondaryBtnText1}
-        secondaryBtnText2={secondaryBtnText2}
-        handleFormChange={handleFormChange}
-      />
-    </form>
-  );
-}
-
-function BasicForm({
-  handleEmail,
-  handlePassword,
-  validationErrors,
-  primaryBtnText,
-  secondaryBtnText1,
-  secondaryBtnText2,
-  handleFormChange,
-}) {
+  const passwordRef = useRef(null);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const handlePasswordVisibility = (event) => {
+    event.preventDefault();
+    if (passwordVisible) {
+      passwordRef.current.type = "password";
+    } else {
+      passwordRef.current.type = "text";
+    }
+    setPasswordVisible((visibility) => !visibility);
+  };
   return (
     <>
       <input
+        type="email"
         placeholder="Email"
         name="email"
         onChange={handleEmail}
@@ -340,12 +74,55 @@ function BasicForm({
       <span className="text-red-700 text-sm">
         {validationErrors.email == null ? "" : validationErrors.email}
       </span>
-      <input
-        placeholder="Password"
-        name="password"
-        onChange={handlePassword}
-        className="block text-lg p-3 w-full rounded-md border-2 border-[#e2e2e2] outline-none"
-      />
+      <div className="p-3 flex justify-center items-center border-2 border-[#e2e2e2] rounded-md">
+        <input
+          ref={passwordRef}
+          type="password"
+          placeholder="Password"
+          name="password"
+          onChange={handlePassword}
+          className="block w-full text-lg outline-none"
+        />
+        {passwordVisible ? (
+          <button className="rounded-full" onClick={handlePasswordVisibility}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#C0C0C0"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-eye-off"
+            >
+              <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+              <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+              <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+              <path d="m2 2 20 20" />
+            </svg>
+          </button>
+        ) : (
+          <button className="rounded-full" onClick={handlePasswordVisibility}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#C0C0C0"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-eye"
+            >
+              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        )}
+      </div>
       <span className="text-red-700 text-sm">
         {validationErrors.password == null ? "" : validationErrors.password}
       </span>

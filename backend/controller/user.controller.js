@@ -17,18 +17,6 @@ const generateAccessAndRefereshToken = async (userId) => {
 export const getCurrentUser = async (req, res, next) => {
   const accessTokenCookie = req.cookies?.accessToken;
   const refreshTokenCookie = req.cookies?.refreshToken;
-  // return res
-  //   .cookie(
-  //     "accessToken",
-  //     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiIxMjM0IiwiaWF0IjoxNzMxOTIzNzEwLCJleHAiOjE3MzE5MjM3NzB9.gWaUIsW8UnWW8ij4NrL3y_Vo2M5Q6VwuBYahotSwfWQ",
-  //     options
-  //   )
-  //   .cookie(
-  //     "refreshToken",
-  //     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzNjNjQzNTU0ODM5M2ZjOWQ4NGZkYmEiLCJpYXQiOjE3MzIwMTEwNjIsImV4cCI6MTczMjg3NTA2Mn0.rz_xYbbGzZ3g9lyRT_a8tiSYUFQXtaW6xq1v9wB1wZM",
-  //     options
-  //   )
-  //   .json(new ApiResponse(401, { user: null }, "lauda"));
   if (!accessTokenCookie)
     return res.json(new ApiResponse(401, { user: null }, "No access token"));
 
@@ -159,4 +147,8 @@ export const loginUser = async (req, res) => {
     );
     return res.json(new ApiResponse(500, { user: null }, error));
   }
+};
+
+export const logoutUser = (req, res) => {
+  return res.clearCookie("accessToken").clearCookie("refreshToken").send();
 };
